@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+  # The API Gateway (FastAPI)
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=postgresql://taylor:password@db:5432/run_coach
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+
+  # Background Worker for AI Logic
+  worker:
+    build: .
+    command: celery -A tasks worker --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=postgresql://taylor:password@db:5432/run_coach
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+
+  # Database
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=taylor
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=run_coach
+    ports:
+      - "5433:5432"
+
+  # Message Broker for Async Tasks
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  # MLflow Tracking Server (Mirroring your F1 setup)
+  mlflow:
+    image: ghcr.io/mlflow/mlflow
+    ports:
+      - "5000:5000"
+    command: mlflow server --host 0.0.0.0
