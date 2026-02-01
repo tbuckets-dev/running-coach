@@ -4,7 +4,7 @@ import requests
 # Change this to your Cloudflare Tunnel URL or http://localhost:8000
 BASE_URL = "http://localhost:8000" 
 ENDPOINT = "/webhooks/strava"
-VERIFY_TOKEN = "your_super_secret_verify_token" # Must match settings.STRAVA_VERIFY_TOKEN
+VERIFY_TOKEN = "Zw!ZaU~N*ZSM2IAd5GV0z_Y!J" # Must match settings.STRAVA_VERIFY_TOKEN
 CHALLENGE_STRING = "sample_challenge_123"
 
 def test_handshake():
