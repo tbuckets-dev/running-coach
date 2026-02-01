@@ -1,4 +1,4 @@
-name: running-coach # This explicitly separates this project in Docker
+version: "3.8"
 
 services:
   db:
