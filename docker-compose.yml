@@ -1,84 +1,25 @@
-version: "3.8"
+name: running-coach # This explicitly separates this project in Docker
 
 services:
-  # The API Gateway (FastAPI)
-  api:
-    build: .
-    container_name: running_api
-    # We remove the hardcoded environment values
-    # They will be injected by the Infisical CLI at runtime
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
-      - STRAVA_CLIENT_SECRET=${STRAVA_CLIENT_SECRET}
-      - OLLAMA_HOST=http://ollama:11434
-    depends_on:
-      - db
-      - redis
-    ports:
-      - "8000:8000"
-
-  # Background Worker for AI Logic
-  worker:
-    build: .
-    command: celery -A tasks worker --loglevel=info
-    volumes:
-      - .:/app
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
-    depends_on:
-      - db
-      - redis
-
-  # Celery Monitoring (Flower)
-  # Access this at http://your-local-ip:5555
-  flower:
-    image: mher/flower
-    container_name: celery_flower
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-    ports:
-      - "5555:5555"
-    depends_on:
-      - redis
-
-  # Local AI Inference (Ollama)
-  # Replace OpenAI with local Mistral/Llama models
-  ollama:
-    image: ollama/ollama:latest
-    container_name: ollama_service
-    volumes:
-      - ./ollama_data:/root/.ollama
-    # If you have an NVIDIA GPU, uncomment the lines below:
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
-
-  # Database
   db:
     image: postgres:15-alpine
-    container_name: running_db
+    container_name: running_coach_db
+    restart: unless-stopped
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "5433:5432" # Map 5433 (external) to 5432 (internal)
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - running_coach_data:/var/lib/postgresql/data
 
-  # Message Broker for Async Tasks
   redis:
     image: redis:7-alpine
+    container_name: running_coach_redis
+    restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6380:6379" # Use a non-standard port to avoid conflict
 
-  # MLflow Tracking Server (Mirroring your F1 setup)
-  mlflow:
-    image: ghcr.io/mlflow/mlflow
-    ports:
-      - "5000:5000"
-    command: mlflow server --host 0.0.0.0
+volumes:
+  running_coach_data: # Named volume ensures data stays separate
