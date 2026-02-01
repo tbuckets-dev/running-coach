@@ -31,6 +31,34 @@ services:
       - db
       - redis
 
+  # Celery Monitoring (Flower)
+  # Access this at http://your-local-ip:5555
+  flower:
+    image: mher/flower
+    container_name: celery_flower
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+
+  # Local AI Inference (Ollama)
+  # Replace OpenAI with local Mistral/Llama models
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama_service
+    volumes:
+      - ./ollama_data:/root/.ollama
+    # If you have an NVIDIA GPU, uncomment the lines below:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
   # Database
   db:
     image: postgres:15-alpine
