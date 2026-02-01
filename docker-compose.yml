@@ -4,16 +4,19 @@ services:
   # The API Gateway (FastAPI)
   api:
     build: .
-    ports:
-      - "8000:8000"
-    volumes:
-      - .:/app
+    container_name: running_api
+    # We remove the hardcoded environment values
+    # They will be injected by the Infisical CLI at runtime
     environment:
-      - DATABASE_URL=postgresql://taylor:password@db:5432/run_coach
-      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - STRAVA_CLIENT_SECRET=${STRAVA_CLIENT_SECRET}
+      - OLLAMA_HOST=http://ollama:11434
     depends_on:
       - db
       - redis
+    ports:
+      - "8000:8000"
 
   # Background Worker for AI Logic
   worker:
@@ -22,21 +25,22 @@ services:
     volumes:
       - .:/app
     environment:
-      - DATABASE_URL=postgresql://taylor:password@db:5432/run_coach
-      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
     depends_on:
       - db
       - redis
 
   # Database
   db:
-    image: postgres:15
+    image: postgres:15-alpine
+    container_name: running_db
     environment:
-      - POSTGRES_USER=taylor
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=run_coach
-    ports:
-      - "5433:5432"
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   # Message Broker for Async Tasks
   redis:
