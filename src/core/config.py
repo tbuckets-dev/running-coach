@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
     POSTGRES_HOST: str = "db"  # Matches the service name in docker-compose
-    POSTGRES_PORT: int = 5432
+    POSTGRES_PORT: int = 5433
 
     # Strava Credentials
     STRAVA_CLIENT_ID: str
